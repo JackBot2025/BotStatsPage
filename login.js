@@ -1,4 +1,3 @@
-
 const allowedUsername = "admin";
 const allowedPassword = "admin123";
 
@@ -14,24 +13,29 @@ function login() {
   }
 }
 
+function countInvites(data, userId) {
+  return Object.values(data).filter(u => u.invited_by === userId).length;
+}
+
 function loadData() {
-  fetch("user_data.json")
+  fetch("user_stats.json")
     .then(res => res.json())
     .then(data => {
       const tbody = document.querySelector("#stats-table tbody");
+      tbody.innerHTML = ""; // alte Daten löschen
       for (const [id, info] of Object.entries(data)) {
         const row = document.createElement("tr");
         row.innerHTML = `
           <td>${id}</td>
-          <td>${info.referrals}</td>
-          <td>${info.bonus_images}</td>
-          <td>${info.daily_normal}</td>
-          <td>${info.daily_adult}</td>
+          <td>${countInvites(data, id)}</td>
+          <td>${info.bonus_count || 0}</td>
+          <td>${info.normal_count || 0}</td>
+          <td>${info.adult_count || 0}</td>
         `;
         tbody.appendChild(row);
       }
     })
     .catch(err => {
-      alert("Fehler beim Laden der Datei user_data.json");
+      alert("Fehler beim Laden der Datei user_stats.json");
     });
 }
