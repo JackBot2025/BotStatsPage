@@ -1,0 +1,14 @@
+{
+  "123456789": {
+    "referrals": 3,
+    "bonus_images": 2,
+    "daily_normal": 1,
+    "daily_adult": 1
+  },
+  "987654321": {
+    "referrals": 1,
+    "bonus_images": 1,
+    "daily_normal": 0,
+    "daily_adult": 2
+  }
+}
