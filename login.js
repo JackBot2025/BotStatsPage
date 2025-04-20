@@ -18,7 +18,7 @@ function countInvites(data, userId) {
 }
 
 function loadData() {
-  fetch("user_data.json")
+  fetch("user_stats.json")
     .then(res => res.json())
     .then(data => {
       const tbody = document.querySelector("#stats-table tbody");
@@ -39,6 +39,6 @@ function loadData() {
       }
     })
     .catch(() => {
-      alert("Fehler beim Laden der Datei user_data.json");
+      alert("Fehler beim Laden der Datei user_stats.json");
     });
 }
