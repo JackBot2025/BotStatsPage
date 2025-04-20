@@ -18,16 +18,19 @@ function countInvites(data, userId) {
 }
 
 function loadData() {
-  fetch("user_stats.json")
+  fetch("user_data.json")
     .then(res => res.json())
     .then(data => {
       const tbody = document.querySelector("#stats-table tbody");
-      tbody.innerHTML = ""; // alte Daten löschen
       for (const [id, info] of Object.entries(data)) {
         const row = document.createElement("tr");
         row.innerHTML = `
           <td>${id}</td>
-          <td>${countInvites(data, id)}</td>
+          <td>${info.first_name || "-"}</td>
+          <td>${info.username || "-"}</td>
+          <td>${info.language_code || "-"}</td>
+          <td>${info.invited_by || "-"}</td>
+          <td>${info.points || 0}</td>
           <td>${info.bonus_count || 0}</td>
           <td>${info.normal_count || 0}</td>
           <td>${info.adult_count || 0}</td>
@@ -35,7 +38,7 @@ function loadData() {
         tbody.appendChild(row);
       }
     })
-    .catch(err => {
-      alert("Fehler beim Laden der Datei user_stats.json");
+    .catch(() => {
+      alert("Fehler beim Laden der Datei user_data.json");
     });
 }
