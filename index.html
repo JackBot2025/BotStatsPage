@@ -1,40 +1,512 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Bot Nutzerstatistiken</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Telegram Bot Statistiken</title>
+  <style>
+    :root {
+      --primary-color: #4a76a8;
+      --secondary-color: #3a5e89;
+      --accent-color: #5e81ac;
+      --background-color: #f5f7fa;
+      --card-bg: #ffffff;
+      --text-color: #333333;
+      --border-radius: 8px;
+      --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--background-color);
+      color: var(--text-color);
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      padding: 25px;
+      margin-bottom: 20px;
+    }
+
+    h1, h2 {
+      color: var(--primary-color);
+      margin-bottom: 20px;
+    }
+
+    /* Login Form */
+    #login-box {
+      max-width: 400px;
+      margin: 100px auto;
+    }
+
+    .input-group {
+      margin-bottom: 15px;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="file"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: var(--border-radius);
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 500;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: var(--secondary-color);
+    }
+
+    /* Error and Success Messages */
+    .error-message {
+      color: #d9534f;
+      margin-top: 10px;
+    }
+
+    .success-message {
+      color: #5cb85c;
+      margin-top: 10px;
+    }
+
+    /* Stats Section */
+    .stats-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .search-filter {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* Table Styling */
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: var(--accent-color);
+      color: white;
+      position: sticky;
+      top: 0;
+    }
+
+    tbody tr:hover {
+      background-color: rgba(94, 129, 172, 0.1);
+    }
+
+    /* File Upload Area */
+    .file-upload {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .upload-btn-wrapper {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+    }
+
+    .upload-btn-wrapper input[type=file] {
+      font-size: 100px;
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .stats-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+      }
+      
+      .search-filter {
+        width: 100%;
+      }
+      
+      input[type="text"],
+      input[type="password"] {
+        padding: 10px;
+      }
+      
+      button {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 <body>
-  <div id="login-box">
-    <h2>Login</h2>
-    <input type="text" id="username" placeholder="Benutzername">
-    <input type="password" id="password" placeholder="Passwort">
-    <button onclick="login()">Login</button>
-    <p id="login-error" style="color:red;"></p>
+  <div class="container">
+    <!-- Login Section -->
+    <div id="login-box" class="card">
+      <h2>Bot Admin Login</h2>
+      <div class="input-group">
+        <label for="username">Benutzername</label>
+        <input type="text" id="username" placeholder="Benutzername eingeben">
+      </div>
+      <div class="input-group">
+        <label for="password">Passwort</label>
+        <input type="password" id="password" placeholder="Passwort eingeben">
+      </div>
+      <button onclick="login()">Anmelden</button>
+      <p id="login-error" class="error-message"></p>
+    </div>
+
+    <!-- Stats Dashboard -->
+    <div id="stats-box" class="card" style="display:none;">
+      <div class="stats-header">
+        <h1>Telegram Bot Nutzerstatistiken</h1>
+        <div class="search-filter">
+          <input type="text" id="search-input" placeholder="Suchen...">
+          <button onclick="searchTable()">Suchen</button>
+        </div>
+      </div>
+
+      <!-- File Upload Area -->
+      <div class="card">
+        <h2>Nutzerdaten hochladen</h2>
+        <div class="file-upload">
+          <input type="file" id="file-upload" accept=".json, .csv">
+          <button onclick="uploadFile()">Daten importieren</button>
+        </div>
+        <p id="upload-status"></p>
+      </div>
+
+      <!-- Stats Table -->
+      <div class="table-container">
+        <table id="stats-table">
+          <thead>
+            <tr>
+              <th onclick="sortTable(0)">Telegram-ID ↕</th>
+              <th onclick="sortTable(1)">Name ↕</th>
+              <th onclick="sortTable(2)">Username ↕</th>
+              <th onclick="sortTable(3)">Sprache ↕</th>
+              <th onclick="sortTable(4)">Referrer ↕</th>
+              <th onclick="sortTable(5)">Punkte ↕</th>
+              <th onclick="sortTable(6)">Bonusbilder ↕</th>
+              <th onclick="sortTable(7)">Normal (heute) ↕</th>
+              <th onclick="sortTable(8)">18+ (heute) ↕</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
-  <div id="stats-box" style="display:none;">
-    <h2>Nutzerstatistiken</h2>
-    <table id="stats-table">
-      <thead>
-        <tr>
-          <th>Telegram-ID</th>
-          <th>Name</th>
-          <th>Username</th>
-          <th>Sprache</th>
-          <th>Referrer</th>
-          <th>Punkte</th>
-          <th>Bonusbilder</th>
-          <th>Normal (heute)</th>
-          <th>18+ (heute)</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+  <script>
+    // Dummy credentials for demonstration - In a real app, use proper authentication
+    const validUsername = "admin";
+    const validPassword = "password123";
 
-  <script src="login.js"></script>
+    // Login function
+    function login() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      const errorElement = document.getElementById("login-error");
+      
+      if (username === validUsername && password === validPassword) {
+        document.getElementById("login-box").style.display = "none";
+        document.getElementById("stats-box").style.display = "block";
+        loadSampleData(); // Load sample data for demonstration
+      } else {
+        errorElement.textContent = "Ungültiger Benutzername oder Passwort";
+      }
+    }
+
+    // Load sample data
+    function loadSampleData() {
+      const sampleData = [
+        { 
+          id: "123456789", 
+          name: "Max Mustermann", 
+          username: "@maxm", 
+          language: "Deutsch", 
+          referrer: "direktlink",
+          points: 250,
+          bonusImages: 3,
+          normalToday: 15,
+          adultToday: 5
+        },
+        { 
+          id: "987654321", 
+          name: "Anna Schmidt", 
+          username: "@annas", 
+          language: "Deutsch", 
+          referrer: "chatlink",
+          points: 320,
+          bonusImages: 5,
+          normalToday: 8,
+          adultToday: 2
+        },
+        { 
+          id: "567891234", 
+          name: "John Doe", 
+          username: "@johndoe", 
+          language: "Englisch", 
+          referrer: "direktlink",
+          points: 180,
+          bonusImages: 1,
+          normalToday: 12,
+          adultToday: 0
+        }
+      ];
+      
+      displayData(sampleData);
+    }
+
+    // Display data in the table
+    function displayData(data) {
+      const tableBody = document.getElementById("table-body");
+      tableBody.innerHTML = "";
+      
+      data.forEach(user => {
+        const row = document.createElement("tr");
+        
+        row.innerHTML = `
+          <td>${user.id}</td>
+          <td>${user.name}</td>
+          <td>${user.username}</td>
+          <td>${user.language}</td>
+          <td>${user.referrer}</td>
+          <td>${user.points}</td>
+          <td>${user.bonusImages}</td>
+          <td>${user.normalToday}</td>
+          <td>${user.adultToday}</td>
+        `;
+        
+        tableBody.appendChild(row);
+      });
+    }
+
+    // File upload handling
+    function uploadFile() {
+      const fileInput = document.getElementById("file-upload");
+      const statusElement = document.getElementById("upload-status");
+      
+      if (!fileInput.files.length) {
+        statusElement.textContent = "Bitte wählen Sie eine Datei aus.";
+        statusElement.className = "error-message";
+        return;
+      }
+      
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        try {
+          let userData;
+          
+          if (file.name.endsWith('.json')) {
+            userData = JSON.parse(e.target.result);
+          } else if (file.name.endsWith('.csv')) {
+            userData = parseCSV(e.target.result);
+          } else {
+            throw new Error("Nicht unterstütztes Dateiformat");
+          }
+          
+          displayData(userData);
+          statusElement.textContent = "Daten erfolgreich importiert!";
+          statusElement.className = "success-message";
+        } catch (error) {
+          statusElement.textContent = "Fehler beim Parsen der Datei: " + error.message;
+          statusElement.className = "error-message";
+        }
+      };
+      
+      reader.onerror = function() {
+        statusElement.textContent = "Fehler beim Lesen der Datei.";
+        statusElement.className = "error-message";
+      };
+      
+      if (file.name.endsWith('.json') || file.name.endsWith('.csv')) {
+        reader.readAsText(file);
+      } else {
+        statusElement.textContent = "Bitte laden Sie eine JSON oder CSV Datei hoch.";
+        statusElement.className = "error-message";
+      }
+    }
+
+    // CSV Parser function
+    function parseCSV(csvText) {
+      const lines = csvText.split('\n');
+      const result = [];
+      const headers = lines[0].split(',');
+      
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        
+        const obj = {};
+        const currentLine = lines[i].split(',');
+        
+        for (let j = 0; j < headers.length; j++) {
+          const header = headers[j].trim();
+          const value = currentLine[j] ? currentLine[j].trim() : '';
+          
+          // Map CSV columns to our data structure
+          if (header === 'telegram_id') obj.id = value;
+          else if (header === 'user_name') obj.name = value;
+          else if (header === 'username') obj.username = value;
+          else if (header === 'language') obj.language = value;
+          else if (header === 'referrer') obj.referrer = value;
+          else if (header === 'points') obj.points = parseInt(value) || 0;
+          else if (header === 'bonus_images') obj.bonusImages = parseInt(value) || 0;
+          else if (header === 'normal_today') obj.normalToday = parseInt(value) || 0;
+          else if (header === 'adult_today') obj.adultToday = parseInt(value) || 0;
+          else obj[header] = value;
+        }
+        
+        result.push(obj);
+      }
+      
+      return result;
+    }
+
+    // Search function
+    function searchTable() {
+      const input = document.getElementById("search-input").value.toLowerCase();
+      const table = document.getElementById("stats-table");
+      const rows = table.getElementsByTagName("tr");
+      
+      for (let i = 1; i < rows.length; i++) {
+        let found = false;
+        const cells = rows[i].getElementsByTagName("td");
+        
+        for (let j = 0; j < cells.length; j++) {
+          const cellText = cells[j].textContent || cells[j].innerText;
+          
+          if (cellText.toLowerCase().indexOf(input) > -1) {
+            found = true;
+            break;
+          }
+        }
+        
+        rows[i].style.display = found ? "" : "none";
+      }
+    }
+
+    // Table sorting function
+    function sortTable(columnIndex) {
+      const table = document.getElementById("stats-table");
+      let switching = true;
+      let direction = "asc";
+      let shouldSwitch;
+      let switchcount = 0;
+      
+      while (switching) {
+        switching = false;
+        const rows = table.rows;
+        
+        for (let i = 1; i < (rows.length - 1); i++) {
+          shouldSwitch = false;
+          const x = rows[i].getElementsByTagName("td")[columnIndex];
+          const y = rows[i + 1].getElementsByTagName("td")[columnIndex];
+          
+          // Check if the column is numeric
+          const isNumeric = !isNaN(parseInt(x.innerHTML)) && !isNaN(parseInt(y.innerHTML));
+          
+          if (direction === "asc") {
+            if (isNumeric) {
+              if (parseInt(x.innerHTML) > parseInt(y.innerHTML)) {
+                shouldSwitch = true;
+                break;
+              }
+            } else {
+              if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                shouldSwitch = true;
+                break;
+              }
+            }
+          } else if (direction === "desc") {
+            if (isNumeric) {
+              if (parseInt(x.innerHTML) < parseInt(y.innerHTML)) {
+                shouldSwitch = true;
+                break;
+              }
+            } else {
+              if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                shouldSwitch = true;
+                break;
+              }
+            }
+          }
+        }
+        
+        if (shouldSwitch) {
+          rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+          switching = true;
+          switchcount++;
+        } else {
+          if (switchcount === 0 && direction === "asc") {
+            direction = "desc";
+            switching = true;
+          }
+        }
+      }
+      
+      // Update header arrows
+      const headers = table.getElementsByTagName("th");
+      for (let i = 0; i < headers.length; i++) {
+        if (i === columnIndex) {
+          headers[i].innerText = headers[i].innerText.replace(" ↕", "") + (direction === "asc" ? " ↓" : " ↑");
+        } else {
+          headers[i].innerText = headers[i].innerText.replace(" ↓", "").replace(" ↑", "") + " ↕";
+        }
+      }
+    }
+  </script>
 </body>
 </html>
