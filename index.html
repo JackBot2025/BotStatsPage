@@ -351,7 +351,9 @@
           let userData;
           
           if (file.name.endsWith('.json')) {
-            userData = JSON.parse(e.target.result);
+            // Parse the custom JSON format
+            const rawData = JSON.parse(e.target.result);
+            userData = parseCustomJSON(rawData);
           } else if (file.name.endsWith('.csv')) {
             userData = parseCSV(e.target.result);
           } else {
@@ -380,6 +382,35 @@
       }
     }
 
+    // Parse custom JSON format where Telegram ID is the key
+    function parseCustomJSON(jsonData) {
+      const result = [];
+      
+      // Iterate through each key (Telegram ID) in the object
+      for (const telegramId in jsonData) {
+        if (jsonData.hasOwnProperty(telegramId)) {
+          const userData = jsonData[telegramId];
+          
+          // Create a standardized user object to match our table structure
+          const user = {
+            id: telegramId,
+            name: userData.first_name || '',
+            username: userData.username ? '@' + userData.username : '',
+            language: userData.language_code || '',
+            referrer: userData.invited_by || '',
+            points: userData.points || 0,
+            bonusImages: userData.bonus_count || 0,
+            normalToday: userData.normal_count || 0,
+            adultToday: userData.adult_count || 0
+          };
+          
+          result.push(user);
+        }
+      }
+      
+      return result;
+    }
+
     // CSV Parser function
     function parseCSV(csvText) {
       const lines = csvText.split('\n');
@@ -398,14 +429,14 @@
           
           // Map CSV columns to our data structure
           if (header === 'telegram_id') obj.id = value;
-          else if (header === 'user_name') obj.name = value;
-          else if (header === 'username') obj.username = value;
-          else if (header === 'language') obj.language = value;
-          else if (header === 'referrer') obj.referrer = value;
+          else if (header === 'user_name' || header === 'first_name') obj.name = value;
+          else if (header === 'username') obj.username = value.startsWith('@') ? value : '@' + value;
+          else if (header === 'language' || header === 'language_code') obj.language = value;
+          else if (header === 'referrer' || header === 'invited_by') obj.referrer = value;
           else if (header === 'points') obj.points = parseInt(value) || 0;
-          else if (header === 'bonus_images') obj.bonusImages = parseInt(value) || 0;
-          else if (header === 'normal_today') obj.normalToday = parseInt(value) || 0;
-          else if (header === 'adult_today') obj.adultToday = parseInt(value) || 0;
+          else if (header === 'bonus_images' || header === 'bonus_count') obj.bonusImages = parseInt(value) || 0;
+          else if (header === 'normal_today' || header === 'normal_count') obj.normalToday = parseInt(value) || 0;
+          else if (header === 'adult_today' || header === 'adult_count') obj.adultToday = parseInt(value) || 0;
           else obj[header] = value;
         }
         
@@ -501,7 +532,7 @@
       const headers = table.getElementsByTagName("th");
       for (let i = 0; i < headers.length; i++) {
         if (i === columnIndex) {
-          headers[i].innerText = headers[i].innerText.replace(" ↕", "") + (direction === "asc" ? " ↓" : " ↑");
+          headers[i].innerText = headers[i].innerText.replace(" ↕", "").replace(" ↓", "").replace(" ↑", "") + (direction === "asc" ? " ↓" : " ↑");
         } else {
           headers[i].innerText = headers[i].innerText.replace(" ↓", "").replace(" ↑", "") + " ↕";
         }
